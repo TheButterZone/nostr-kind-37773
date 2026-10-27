@@ -41,6 +41,12 @@ export interface VerificationDetails {
   registryValidGuaranteed: boolean;
   distinctionRulePassed: boolean;
   advisoryNotice: string;
+
+  uriVerification?: {
+    status: 'canonical' | 'domain_mismatch' | 'nick_mismatch' | 'invalid_url' | 'none';
+    message: string;
+    canonicalUrl?: string;
+  };
 }
 
 export interface RelayStatus {

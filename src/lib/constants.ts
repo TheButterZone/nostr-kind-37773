@@ -11,7 +11,7 @@ export const DEFAULT_RELAYS: string[] = [
   'wss://relay.dreamith.to',
 ];
 
-export const BUTTERZONE_POC_EVENT: NostrEvent = {
+export const THEBUTTERZONE_POC_EVENT: NostrEvent = {
   id: "6357ba2d52aa177c7dedda29957539e5c6f494d99d2ccc0acb98f526486ef680",
   pubkey: "2e17b86d692c979bb5b7c2ddb9f70e02e76bbc358afa95ac68135047bbe10e02",
   created_at: 1791970732,
@@ -65,7 +65,7 @@ export const SAMPLE_BTC_POC_EVENT: NostrEvent = {
   ],
   content: `-----BEGIN BITCOIN SIGNED MESSAGE-----
 Address: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
-Message: I assert control of Nostr pubkey npub1u724pwn2r92x76g63u77g290h835s64c8fcvm25f6966q59quxzquk9dff. This is a self-attested statement associating external Bitcoin address 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa with this Nostr identity.
+Message: I, satoshi_reserve, assert control of Nostr pubkey npub1u724pwn2r92x76g63u77g290h835s64c8fcvm25f6966q59quxzquk9dff. This is a self-attested statement associating external identity satoshi_reserve with this Nostr identity.
 -----BEGIN BITCOIN SIGNATURE-----
 IB8Z24wO6mO/G8vXW3aK9jL7b2K1JgR5X6yN9P4Q7W1Z2X3C4V5B6N7M8L9K0J1H2G3F4D5S6A7Q8W9E0R1T2Y3U=
 -----END BITCOIN SIGNATURE-----`,

@@ -65,6 +65,51 @@ export async function verifyKind37773Claim(
     advisoryNotice = cryptoError || 'Cryptographic verification could not be completed.';
   }
 
+  // 5. URI Integrity Check
+  let uriVerification: VerificationDetails['uriVerification'];
+  if (!parsedTags.uri.trim()) {
+    uriVerification = {
+      status: 'none',
+      message: 'No URI tag present (optional per Kind 37773 specification).',
+    };
+  } else {
+    try {
+      const parsedUrl = new URL(parsedTags.uri.trim());
+      const host = parsedUrl.hostname.toLowerCase();
+      if (host !== 'bitcoin-otc.com' && host !== 'www.bitcoin-otc.com') {
+        uriVerification = {
+          status: 'domain_mismatch',
+          message: `Non-canonical domain "${parsedUrl.hostname}". Kind 37773 is dedicated to Bitcoin-OTC; URI MUST point exclusively to bitcoin-otc.com.`,
+        };
+      } else {
+        const nickParam = parsedUrl.searchParams.get('nick') || '';
+        const cleanExpected = parsedTags.identifier.trim().toLowerCase();
+        if (!nickParam) {
+          uriVerification = {
+            status: 'nick_mismatch',
+            message: 'URI is missing the required ?nick= query parameter.',
+          };
+        } else if (cleanExpected && nickParam.toLowerCase() !== cleanExpected) {
+          uriVerification = {
+            status: 'nick_mismatch',
+            message: `URI nick parameter ("${nickParam}") does not match claimed nick ("${parsedTags.identifier}"). Potential profile spoof.`,
+          };
+        } else {
+          uriVerification = {
+            status: 'canonical',
+            message: `Canonical Bitcoin-OTC profile link verified for nick "${parsedTags.identifier}".`,
+            canonicalUrl: parsedTags.uri.trim(),
+          };
+        }
+      }
+    } catch {
+      uriVerification = {
+        status: 'invalid_url',
+        message: 'URI tag does not contain a valid parseable URL.',
+      };
+    }
+  }
+
   return {
     nostrEventValid: nostrCheck.isValid,
     nostrIdMatches: nostrCheck.idMatches,
@@ -86,5 +131,6 @@ export async function verifyKind37773Claim(
     registryValidGuaranteed,
     distinctionRulePassed,
     advisoryNotice,
+    uriVerification,
   };
 }

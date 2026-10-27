@@ -70,10 +70,16 @@ export const ClaimBuilderView: React.FC<ClaimBuilderViewProps> = ({
   const [proofType, setProofType] = useState<'btc' | 'pgp'>('btc');
   const [platform, setPlatform] = useState('bitcoin-otc');
   const [identifier, setIdentifier] = useState('');
-  const [uri, setUri] = useState('');
+  const [includeUri, setIncludeUri] = useState(true);
   const [externalKey, setExternalKey] = useState('');
   const [btcSignatureInput, setBtcSignatureInput] = useState('');
   const [pgpPayloadInput, setPgpPayloadInput] = useState('');
+
+  const canonicalUri = useMemo(() => {
+    const cleanId = identifier.trim();
+    if (!cleanId) return 'https://bitcoin-otc.com/viewratingdetail.php?nick=<nick>';
+    return `https://bitcoin-otc.com/viewratingdetail.php?nick=${encodeURIComponent(cleanId.toLowerCase())}`;
+  }, [identifier]);
 
   const sanitizePgpKey = (val: string): string => {
     return val.replace(/^0x/i, '').replace(/[\s:-]/g, '').toUpperCase();
@@ -318,11 +324,8 @@ export const ClaimBuilderView: React.FC<ClaimBuilderViewProps> = ({
   const isPgpKeyValid = proofType === 'pgp' && pgpKeyStatus?.type === 'success';
   const isStatementReady = proofType === 'btc' ? isBtcAddressValid : isPgpKeyValid;
 
-  // Real canonical statement (constructed with valid target address or fallback)
-  const canonicalStatement =
-    proofType === 'btc'
-      ? `I assert control of Nostr pubkey ${userNpub}. This is a self-attested statement associating external Bitcoin address ${cleanBtcAddress || externalKey || '<btc_address>'} with this Nostr identity.`
-      : `I, ${identifier || '<username>'}, assert control of Nostr pubkey ${userNpub}. This is a self-attested statement associating external identity ${cleanPgpKey || identifier || '<username>'} with this Nostr identity.`;
+  // Real canonical statement (associating external identity <nick> with Nostr pubkey)
+  const canonicalStatement = `I, ${identifier || '<username>'}, assert control of Nostr pubkey ${userNpub}. This is a self-attested statement associating external identity ${identifier || '<username>'} with this Nostr identity.`;
 
   // Gated Display Statement to prevent invalid address embedding
   const displayStatement = useMemo(() => {
@@ -403,11 +406,12 @@ export const ClaimBuilderView: React.FC<ClaimBuilderViewProps> = ({
       const tags: string[][] = [
         ['d', dTag],
         ['proof-type', proofType],
-        ['key', sanitizedKey],
       ];
-      if (uri.trim()) {
-        tags.push(['uri', uri.trim()]);
+      if (includeUri && identifier.trim()) {
+        const computedCanonicalUri = `https://bitcoin-otc.com/viewratingdetail.php?nick=${encodeURIComponent(identifier.trim().toLowerCase())}`;
+        tags.push(['uri', computedCanonicalUri]);
       }
+      tags.push(['key', sanitizedKey]);
 
       let finalContent = '';
       if (proofType === 'btc') {
@@ -765,6 +769,51 @@ export const ClaimBuilderView: React.FC<ClaimBuilderViewProps> = ({
                 </div>
               </div>
 
+              {/* URI tag */}
+              <div className="bg-[#0B0F17] rounded-lg p-3.5 border border-slate-800 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-slate-300 flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={includeUri}
+                      onChange={(e) => setIncludeUri(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-900 text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer"
+                    />
+                    <span>Include canonical Bitcoin-OTC profile link (<code className="text-purple-300 font-mono">["uri", ...]</code>)</span>
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-mono">optional tag</span>
+                </div>
+
+                {includeUri ? (
+                  <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                      <span>Canonical URL (strictly bound to nick &amp; bitcoin-otc.com):</span>
+                    </div>
+                    <div className="px-3 py-2 bg-slate-900/80 border border-slate-800 rounded-lg text-xs font-mono text-purple-300 break-all select-all flex items-center justify-between gap-2">
+                      <span>{canonicalUri}</span>
+                      {identifier.trim() && (
+                        <a
+                          href={canonicalUri}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-slate-400 hover:text-white shrink-0 p-1 rounded"
+                          title="Preview canonical profile link"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                      Kind 37773 is dedicated to Bitcoin-OTC. To prevent phishing and impersonation, the <code className="text-purple-400">uri</code> tag only permits the canonical <code className="text-slate-300">bitcoin-otc.com</code> profile matching your entered nick.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-500 italic pt-1 border-t border-slate-800/80">
+                    The <code className="text-slate-400 font-mono">["uri", ...]</code> tag will be omitted from the event payload.
+                  </p>
+                )}
+              </div>
+
               {/* Key tag */}
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -794,7 +843,7 @@ export const ClaimBuilderView: React.FC<ClaimBuilderViewProps> = ({
                   }}
                   placeholder={
                     proofType === 'btc'
-                      ? 'Bitcoin Address (e.g. 1EkTHNJQFHuHiP3QUN3DcSyZ4XBPBpmZwm)'
+                      ? 'Bitcoin Address (e.g. 16193nPH2mS3Q5U2Ui9HMLPxmxR9r4wxu3)'
                       : 'PGP Fingerprint (e.g. C0A62F7AD5C16FB75A14A20D750A6640C5E4961B)'
                   }
                   className="w-full px-3 py-2 bg-[#0B0F17] border border-slate-800 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-purple-500"
@@ -822,7 +871,7 @@ export const ClaimBuilderView: React.FC<ClaimBuilderViewProps> = ({
                         <span>Must be a legacy P2PKH address starting with 1. Bech32 (bc1) and P2SH (3) are rejected.</span>
                         <button
                           type="button"
-                          onClick={() => setExternalKey('1EkTHNJQFHuHiP3QUN3DcSyZ4XBPBpmZwm')}
+                          onClick={() => setExternalKey('16193nPH2mS3Q5U2Ui9HMLPxmxR9r4wxu3')}
                           className="text-amber-400 hover:text-amber-300 underline font-mono text-[10px] cursor-pointer"
                         >
                           Fill Example P2PKH Address
@@ -863,20 +912,6 @@ export const ClaimBuilderView: React.FC<ClaimBuilderViewProps> = ({
                     )}
                   </div>
                 )}
-              </div>
-
-              {/* URI tag */}
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
-                  External URI Reference (`uri` tag, optional)
-                </label>
-                <input
-                  type="url"
-                  value={uri}
-                  onChange={(e) => setUri(e.target.value)}
-                  placeholder="https://bitcoin-otc.com/viewratingdetail.php?nick=thebutterzone"
-                  className="w-full px-3 py-2 bg-[#0B0F17] border border-slate-800 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-purple-500"
-                />
               </div>
 
               {/* Statement Template with Real npub & Address Gating */}

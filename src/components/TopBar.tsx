@@ -6,14 +6,14 @@ export type ActiveTab = 'verifier' | 'builder' | 'guide' | 'relays' | 'spec';
 interface TopBarProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
-  onLoadButterzonePoc: () => void;
+  onLoadTheButterZonePoc: () => void;
   onLoadBtcPoc: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
   activeTab,
   onTabChange,
-  onLoadButterzonePoc,
+  onLoadTheButterZonePoc,
   onLoadBtcPoc,
 }) => {
   return (
@@ -103,8 +103,8 @@ export const TopBar: React.FC<TopBarProps> = ({
       <div className="flex items-center gap-2 shrink-0">
         <div className="flex items-center bg-slate-800/80 p-0.5 rounded-lg border border-slate-700/60">
           <button
-            onClick={onLoadButterzonePoc}
-            title="Load ButterZone Bitcoin-OTC PGP POC event"
+            onClick={onLoadTheButterZonePoc}
+            title="Load TheButterZone Bitcoin-OTC PGP POC event"
             className="px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-700/60 rounded-md transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className="w-3 h-3 text-purple-400" />

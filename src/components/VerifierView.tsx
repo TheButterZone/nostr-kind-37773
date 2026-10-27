@@ -16,7 +16,7 @@ import {
 import { NostrEvent, VerificationDetails } from '../types/nostr';
 import { parseClaimTags, getNpubFromPubkey } from '../lib/nostrVerifier';
 import { verifyKind37773Claim } from '../lib/claimVerifier';
-import { BUTTERZONE_POC_EVENT, SAMPLE_BTC_POC_EVENT } from '../lib/constants';
+import { THEBUTTERZONE_POC_EVENT, SAMPLE_BTC_POC_EVENT } from '../lib/constants';
 
 interface VerifierViewProps {
   currentEvent: NostrEvent;
@@ -119,7 +119,7 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
         <div className="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center gap-2">
           <span className="text-xs text-slate-400 font-medium">Test Events:</span>
           <button
-            onClick={() => onUpdateEvent(BUTTERZONE_POC_EVENT)}
+            onClick={() => onUpdateEvent(THEBUTTERZONE_POC_EVENT)}
             className="px-2.5 py-1 text-xs font-mono rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
           >
             TheButterZone (PGP on bitcoin-otc)
@@ -322,6 +322,47 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
                 </div>
               </div>
 
+              {/* uri tag */}
+              <div className="bg-[#0B0F17] rounded-lg border border-slate-800 p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                  <span className="font-mono text-purple-400">["uri", "..."]</span>
+                  <span>External Registry Link</span>
+                </div>
+                {parsedTags.uri ? (
+                  <div className="space-y-1.5">
+                    <a
+                      href={parsedTags.uri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      referrerPolicy="no-referrer"
+                      className="text-xs font-mono text-purple-400 hover:text-purple-300 break-all flex items-center gap-1.5"
+                    >
+                      <span className="truncate">{parsedTags.uri}</span>
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                    {verificationResult?.uriVerification && (
+                      <div className={`text-[11px] px-2 py-1 rounded border flex items-center gap-1.5 ${
+                        verificationResult.uriVerification.status === 'canonical'
+                          ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
+                          : 'bg-amber-950/40 border-amber-800/60 text-amber-300'
+                      }`}>
+                        {verificationResult.uriVerification.status === 'canonical' ? (
+                          <Check className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                        )}
+                        <span>{verificationResult.uriVerification.message}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-500 font-mono flex items-center justify-between">
+                    <span>No external URI provided</span>
+                    <span className="text-[10px] text-slate-600 bg-slate-900 px-1.5 py-0.5 rounded">optional</span>
+                  </div>
+                )}
+              </div>
+
               {/* key tag */}
               <div className="bg-[#0B0F17] rounded-lg border border-slate-800 p-4">
                 <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
@@ -340,28 +381,6 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
                     {copiedKey === 'key' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-              </div>
-
-              {/* uri tag */}
-              <div className="bg-[#0B0F17] rounded-lg border border-slate-800 p-4">
-                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                  <span className="font-mono text-purple-400">["uri", "..."]</span>
-                  <span>External Registry Link</span>
-                </div>
-                {parsedTags.uri ? (
-                  <a
-                    href={parsedTags.uri}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
-                    className="text-xs font-mono text-purple-400 hover:text-purple-300 break-all flex items-center gap-1.5"
-                  >
-                    <span className="truncate">{parsedTags.uri}</span>
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  </a>
-                ) : (
-                  <span className="text-xs text-slate-500 font-mono">No external URI provided</span>
-                )}
               </div>
             </div>
 

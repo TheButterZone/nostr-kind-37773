@@ -5,15 +5,15 @@ import { ClaimBuilderView } from './components/ClaimBuilderView';
 import { ClientUXGuideView } from './components/ClientUXGuideView';
 import { RelayManagerView } from './components/RelayManagerView';
 import { SpecRationaleView } from './components/SpecRationaleView';
-import { BUTTERZONE_POC_EVENT, SAMPLE_BTC_POC_EVENT } from './lib/constants';
+import { THEBUTTERZONE_POC_EVENT, SAMPLE_BTC_POC_EVENT } from './lib/constants';
 import { NostrEvent } from './types/nostr';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('verifier');
-  const [currentEvent, setCurrentEvent] = useState<NostrEvent>(BUTTERZONE_POC_EVENT);
+  const [currentEvent, setCurrentEvent] = useState<NostrEvent>(THEBUTTERZONE_POC_EVENT);
 
-  const handleLoadButterzonePoc = () => {
-    setCurrentEvent(BUTTERZONE_POC_EVENT);
+  const handleLoadTheButterZonePoc = () => {
+    setCurrentEvent(THEBUTTERZONE_POC_EVENT);
     setActiveTab('verifier');
   };
 
@@ -28,7 +28,7 @@ export default function App() {
       <TopBar
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onLoadButterzonePoc={handleLoadButterzonePoc}
+        onLoadTheButterZonePoc={handleLoadTheButterZonePoc}
         onLoadBtcPoc={handleLoadBtcPoc}
       />
 

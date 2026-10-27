@@ -1,6 +1,6 @@
 import React from 'react';
 import { BookOpen, Layers, CheckCircle2, ShieldAlert, Cpu } from 'lucide-react';
-import { BUTTERZONE_POC_EVENT } from '../lib/constants';
+import { THEBUTTERZONE_POC_EVENT } from '../lib/constants';
 
 export const SpecRationaleView: React.FC = () => {
   return (
@@ -87,14 +87,14 @@ export const SpecRationaleView: React.FC = () => {
                 <td className="py-2.5 px-3 font-sans text-slate-400">Specifies the verification algorithm to apply to the content payload.</td>
               </tr>
               <tr>
+                <td className="py-2.5 px-3 text-purple-400 font-bold">["uri", ...]</td>
+                <td className="py-2.5 px-3">https://bitcoin-otc.com/viewratingdetail.php?nick=&lt;nick&gt;</td>
+                <td className="py-2.5 px-3 font-sans text-slate-400">(Optional) Canonical reference link to the author's Bitcoin-OTC profile. Must strictly point to <code className="text-purple-300">bitcoin-otc.com</code> with <code className="text-purple-300">?nick=</code> matching the <code className="text-purple-300">d</code> tag identifier to prevent phishing.</td>
+              </tr>
+              <tr>
                 <td className="py-2.5 px-3 text-purple-400 font-bold">["key", ...]</td>
                 <td className="py-2.5 px-3">40-char Fingerprint or Legacy P2PKH Address (1...)</td>
                 <td className="py-2.5 px-3 font-sans text-slate-400">The 40-character PGP fingerprint or legacy P2PKH Bitcoin address against which the signature is verified.</td>
-              </tr>
-              <tr>
-                <td className="py-2.5 px-3 text-purple-400 font-bold">["uri", ...]</td>
-                <td className="py-2.5 px-3">https://...</td>
-                <td className="py-2.5 px-3 font-sans text-slate-400">(Optional) Canonical reference link to the external platform profile or rating.</td>
               </tr>
             </tbody>
           </table>
@@ -109,7 +109,7 @@ export const SpecRationaleView: React.FC = () => {
 
         <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
           <p>
-            When a Nostr client encounters a Kind 37773 event, it follows a 3-step verification pipeline:
+            When a Nostr client encounters a Kind 37773 event, it follows a 4-step verification pipeline:
           </p>
 
           <ol className="list-decimal list-inside space-y-2 text-slate-400">
@@ -124,7 +124,10 @@ export const SpecRationaleView: React.FC = () => {
               </ul>
             </li>
             <li>
-              <strong className="text-slate-200">Step 3 (UX Badging):</strong> Apply the mandate rules:
+              <strong className="text-slate-200">Step 3 (URI Anti-Phishing &amp; Integrity):</strong> If a <code className="text-purple-300">uri</code> tag is present, verify that it points strictly to <code className="text-purple-300">bitcoin-otc.com</code> with a <code className="text-purple-300">?nick=</code> query parameter matching the claimed <code className="text-purple-300">d</code> tag identifier. Reject or flag third-party domains and mismatched nicks as spoof risks.
+            </li>
+            <li>
+              <strong className="text-slate-200">Step 4 (UX Badging):</strong> Apply the mandate rules:
               <ul className="list-disc list-inside pl-5 mt-1 space-y-1">
                 <li>Clients <strong className="text-emerald-400">MAY</strong> indicate that the cryptographic signature was successfully verified.</li>
                 <li>Clients <strong className="text-amber-400">SHOULD</strong> distinguish between successful cryptographic verification and validation of an external identity.</li>
@@ -167,7 +170,7 @@ export const SpecRationaleView: React.FC = () => {
           Canonical POC Event (TheButterZone)
         </h2>
         <pre className="p-4 bg-[#0B0F17] rounded-lg border border-slate-800 text-xs font-mono text-purple-300 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-80">
-          {JSON.stringify(BUTTERZONE_POC_EVENT, null, 2)}
+          {JSON.stringify(THEBUTTERZONE_POC_EVENT, null, 2)}
         </pre>
       </div>
     </div>
