@@ -1,6 +1,6 @@
 {
   "name": "Kind 37773: Nostr External Identity Claims",
-  "description": "An interactive nsite, dual cryptographic verifier (PGP & Bitcoin), relay publisher, and client badge guidelines for Nostr Kind 37773 external identity claims.",
+  "description": "Reference implementation, interactive verifier (PGP & Bitcoin), relay publisher, and client UX badge guidelines for Nostr Kind 37773 Bitcoin-OTC Identity Linkage Proofs.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,7 +1,7 @@
 {
   "name": "nostr-kind-37773",
-  "version": "1.0.0",
-  "description": "Nostr Kind:37773 External Identity Claims & Cryptographic Verifier (Bitcoin P2PKH & PGP)",
+  "version": "1.0.1",
+  "description": "Reference implementation, interactive verifier (PGP & Bitcoin), relay publisher, and client UX badge guidelines for Nostr Kind 37773 Bitcoin-OTC Identity Linkage Proofs.",
   "license": "MIT",
   "private": true,
   "type": "module",
