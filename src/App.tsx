@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ExternalLink } from 'lucide-react';
 import { TopBar, ActiveTab } from './components/TopBar';
 import { VerifierView } from './components/VerifierView';
 import { ClaimBuilderView } from './components/ClaimBuilderView';
@@ -72,6 +73,15 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4 text-slate-400">
+            <a
+              href="https://github.com/thebutterzone/nostr-kind-37773"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-purple-400 transition-colors flex items-center gap-1.5"
+            >
+              <span>Source Code (GitHub)</span>
+              <ExternalLink className="w-3 h-3 text-slate-500" />
+            </a>
             <button
               onClick={() => setActiveTab('spec')}
               className="hover:text-purple-400 transition-colors cursor-pointer"

@@ -12,6 +12,8 @@ import {
   Info,
   Clock,
   Fingerprint,
+  FileCode,
+  Sparkles,
 } from 'lucide-react';
 import { NostrEvent, VerificationDetails } from '../types/nostr';
 import { parseClaimTags, getNpubFromPubkey } from '../lib/nostrVerifier';
@@ -34,7 +36,11 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<VerificationDetails | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'json' | 'content'>('details');
+  const [copiedJson, setCopiedJson] = useState(false);
+  const [activeTab, setActiveTab] = useState<'json' | 'details' | 'content'>('json');
+  const [lastVerifiedTime, setLastVerifiedTime] = useState<string | null>(null);
+  const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
+  const [isCardFlashing, setIsCardFlashing] = useState(false);
 
   useEffect(() => {
     setJsonInput(JSON.stringify(currentEvent, null, 2));
@@ -52,18 +58,72 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
       }
       setParseError(null);
       onUpdateEvent(parsed);
-    } catch (err) {
+    } catch (err: any) {
       setParseError('Invalid JSON format');
     }
   };
 
-  const handleRunVerification = async (evToVerify: NostrEvent = currentEvent) => {
-    setIsVerifying(true);
+  const handleFormatJson = () => {
     try {
-      const res = await verifyKind37773Claim(evToVerify);
+      const parsed = JSON.parse(jsonInput);
+      const formatted = JSON.stringify(parsed, null, 2);
+      setJsonInput(formatted);
+      setParseError(null);
+    } catch (err: any) {
+      setParseError('Cannot format: invalid JSON syntax');
+    }
+  };
+
+  const handleCopyJson = () => {
+    navigator.clipboard.writeText(jsonInput);
+    setCopiedJson(true);
+    setTimeout(() => setCopiedJson(false), 2000);
+  };
+
+  const handleLoadPreset = (preset: NostrEvent) => {
+    setJsonInput(JSON.stringify(preset, null, 2));
+    setParseError(null);
+    onUpdateEvent(preset);
+  };
+
+  const handleRunVerification = async (evToVerify?: NostrEvent) => {
+    setIsVerifying(true);
+    const start = performance.now();
+    try {
+      let target = evToVerify;
+      if (!target) {
+        // Attempt to parse currently typed JSON in the active editor
+        try {
+          const parsed = JSON.parse(jsonInput);
+          if (parsed && typeof parsed === 'object') {
+            if (!parsed.kind || !parsed.tags || !parsed.pubkey) {
+              setParseError('Missing required Nostr event properties (kind, tags, pubkey)');
+            } else {
+              setParseError(null);
+              target = parsed;
+              onUpdateEvent(parsed);
+            }
+          }
+        } catch (err: any) {
+          setParseError(`JSON Syntax Error: ${err?.message || 'Invalid format'}`);
+        }
+      }
+
+      const eventToTest = target || currentEvent;
+      // Perceptible execution delay (~350ms) so user clearly perceives the cryptographic evaluation
+      const [res] = await Promise.all([
+        verifyKind37773Claim(eventToTest),
+        new Promise((resolve) => setTimeout(resolve, 350)),
+      ]);
+
       setVerificationResult(res);
+      const elapsed = Math.max(1, Math.round(performance.now() - start));
+      setLastDurationMs(elapsed);
+      setLastVerifiedTime(new Date().toLocaleTimeString());
+      setIsCardFlashing(true);
+      setTimeout(() => setIsCardFlashing(false), 700);
     } catch (err) {
-      console.error(err);
+      console.error('Verification error:', err);
     } finally {
       setIsVerifying(false);
     }
@@ -77,11 +137,13 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
 
   const parsedTags = parseClaimTags(currentEvent);
   const npub = getNpubFromPubkey(currentEvent.pubkey);
+  const payloadBytes = new Blob([jsonInput]).size;
+  const lineCount = jsonInput.split('\n').length;
 
   return (
     <div className="space-y-6">
       {/* Hero header strip */}
-      <div className="bg-[#111827]/80 rounded-xl border border-slate-800 p-6">
+      <div className="bg-[#111827]/80 rounded-xl border border-slate-800 p-6 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs text-slate-400 mb-1.5 font-mono">
@@ -103,11 +165,17 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {lastVerifiedTime && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono bg-emerald-950/40 border border-emerald-800/60 px-3 py-2 rounded-lg animate-in fade-in duration-300">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Verified at {lastVerifiedTime} ({lastDurationMs}ms)</span>
+              </div>
+            )}
             <button
-              onClick={() => handleRunVerification(currentEvent)}
+              onClick={() => handleRunVerification()}
               disabled={isVerifying}
-              className="px-4 py-2.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-500 active:bg-purple-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-purple-900/30 cursor-pointer whitespace-nowrap shrink-0"
+              className="px-4 py-2.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-500 active:bg-purple-700 disabled:opacity-50 rounded-lg transition-all flex items-center gap-2 shadow-md shadow-purple-900/30 cursor-pointer whitespace-nowrap shrink-0 hover:shadow-purple-600/20"
             >
               <Play className={`w-3.5 h-3.5 fill-current ${isVerifying ? 'animate-spin' : ''}`} />
               <span>{isVerifying ? 'Verifying Proof...' : 'Verify Cryptographic Proof'}</span>
@@ -119,13 +187,13 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
         <div className="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center gap-2">
           <span className="text-xs text-slate-400 font-medium">Test Events:</span>
           <button
-            onClick={() => onUpdateEvent(THEBUTTERZONE_POC_EVENT)}
+            onClick={() => handleLoadPreset(THEBUTTERZONE_POC_EVENT)}
             className="px-2.5 py-1 text-xs font-mono rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
           >
             TheButterZone (PGP on bitcoin-otc)
           </button>
           <button
-            onClick={() => onUpdateEvent(SAMPLE_BTC_POC_EVENT)}
+            onClick={() => handleLoadPreset(SAMPLE_BTC_POC_EVENT)}
             className="px-2.5 py-1 text-xs font-mono rounded bg-slate-800 hover:bg-slate-700 text-amber-300 transition-colors cursor-pointer"
           >
             Bitcoin Signed Message (BTC Address)
@@ -137,7 +205,13 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
       {verificationResult && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Card 1: Nostr Event Integrity */}
-          <div className="bg-[#111827] rounded-xl border border-slate-800 p-5">
+          <div
+            className={`bg-[#111827] rounded-xl border p-5 transition-all duration-300 ${
+              isCardFlashing
+                ? 'border-purple-500 ring-2 ring-purple-500/40 shadow-lg shadow-purple-950/50'
+                : 'border-slate-800'
+            }`}
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-medium text-slate-400">Layer 1: Nostr Protocol</span>
               {verificationResult.nostrEventValid ? (
@@ -161,7 +235,13 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
           </div>
 
           {/* Card 2: Cryptographic Proof Verification */}
-          <div className="bg-[#111827] rounded-xl border border-slate-800 p-5">
+          <div
+            className={`bg-[#111827] rounded-xl border p-5 transition-all duration-300 ${
+              isCardFlashing
+                ? 'border-purple-500 ring-2 ring-purple-500/40 shadow-lg shadow-purple-950/50'
+                : 'border-slate-800'
+            }`}
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-medium text-slate-400">
                 Layer 2: {verificationResult.cryptoAlgorithm || 'Cryptographic Proof'}
@@ -187,7 +267,13 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
           </div>
 
           {/* Card 3: External Registry Validation Advisory */}
-          <div className="bg-[#111827] rounded-xl border border-slate-800 p-5">
+          <div
+            className={`bg-[#111827] rounded-xl border p-5 transition-all duration-300 ${
+              isCardFlashing
+                ? 'border-purple-500 ring-2 ring-purple-500/40 shadow-lg shadow-purple-950/50'
+                : 'border-slate-800'
+            }`}
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-medium text-amber-400">Layer 3: External Registry Rule</span>
               <span className="flex items-center gap-1 text-xs text-amber-400 font-semibold">
@@ -244,47 +330,145 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
       )}
 
       {/* Main Content Workspace Tabs */}
-      <div className="bg-[#111827] rounded-xl border border-slate-800 overflow-hidden">
+      <div className="bg-[#111827] rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+        {/* Workspace Tab Header */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-slate-800 bg-[#0E1524]">
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
-                activeTab === 'details'
-                  ? 'bg-purple-900/40 text-purple-300 border border-purple-800/50'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Parsed Claim Tags &amp; Keys
-            </button>
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
-                activeTab === 'content'
-                  ? 'bg-purple-900/40 text-purple-300 border border-purple-800/50'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Signed Content &amp; Signature
-            </button>
+            {/* Tab 1: Raw Nostr Event JSON (Default & First) */}
             <button
               onClick={() => setActiveTab('json')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'json'
                   ? 'bg-purple-900/40 text-purple-300 border border-purple-800/50'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Raw Nostr Event JSON
+              <FileCode className="w-3.5 h-3.5" />
+              <span>Raw Nostr Event JSON</span>
+              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 border border-purple-800/40">
+                Primary
+              </span>
+            </button>
+
+            {/* Tab 2: Parsed Claim Tags & Keys */}
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'details'
+                  ? 'bg-purple-900/40 text-purple-300 border border-purple-800/50'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Key className="w-3.5 h-3.5" />
+              <span>Parsed Claim Tags &amp; Keys</span>
+            </button>
+
+            {/* Tab 3: Signed Content & Signature */}
+            <button
+              onClick={() => setActiveTab('content')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'content'
+                  ? 'bg-purple-900/40 text-purple-300 border border-purple-800/50'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <FileCheck className="w-3.5 h-3.5" />
+              <span>Signed Content &amp; Signature</span>
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 font-mono">
-            Event ID: {currentEvent.id.slice(0, 12)}...
+          <div className="text-xs text-slate-500 font-mono hidden sm:block">
+            Event ID: {currentEvent.id.slice(0, 16)}...
           </div>
         </div>
 
-        {/* Tab 1: Structured Tag Details */}
+        {/* Tab 1 Body: Raw JSON Workspace (Front & Center) */}
+        {activeTab === 'json' && (
+          <div className="p-6 space-y-4">
+            {/* JSON Editor Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-800/60">
+              <div className="flex items-center gap-2">
+                {parseError ? (
+                  <div className="flex items-center gap-1.5 text-xs text-red-400 font-mono bg-red-950/40 border border-red-800/60 px-2.5 py-1 rounded-md">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{parseError}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono bg-emerald-950/40 border border-emerald-800/60 px-2.5 py-1 rounded-md">
+                    <Check className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+                    <span>Valid Event JSON · Kind {currentEvent.kind || 37773} ({parsedTags.proofType?.toUpperCase() || 'OTC'})</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleFormatJson}
+                  className="px-2.5 py-1 text-xs font-mono rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Format JSON with 2-space indentation"
+                >
+                  <Sparkles className="w-3 h-3 text-purple-400" />
+                  <span>Format</span>
+                </button>
+
+                <button
+                  onClick={handleCopyJson}
+                  className="px-2.5 py-1 text-xs font-mono rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Copy JSON to clipboard"
+                >
+                  {copiedJson ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span className="text-emerald-400">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleRunVerification()}
+                  disabled={isVerifying}
+                  className="px-3 py-1 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-500 active:bg-purple-700 disabled:opacity-50 rounded transition-colors flex items-center gap-1.5 shadow-sm shadow-purple-900/30 cursor-pointer"
+                >
+                  <Play className={`w-3 h-3 fill-current ${isVerifying ? 'animate-spin' : ''}`} />
+                  <span>{isVerifying ? 'Verifying...' : 'Verify Event JSON'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Monospace JSON Textarea */}
+            <div className="relative">
+              <textarea
+                value={jsonInput}
+                onChange={(e) => handleJsonChange(e.target.value)}
+                rows={16}
+                spellCheck={false}
+                placeholder="Paste or edit Kind 37773 Nostr Event JSON..."
+                className="w-full p-4 bg-[#0B0F17] rounded-lg border border-slate-800 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-purple-500/80 leading-relaxed resize-y selection:bg-purple-900/60 selection:text-purple-200"
+              />
+            </div>
+
+            {/* Status Footer */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 font-mono gap-2 pt-1">
+              <div className="flex items-center gap-3">
+                <span>{payloadBytes} bytes</span>
+                <span aria-hidden="true">·</span>
+                <span>{lineCount} lines</span>
+                <span aria-hidden="true">·</span>
+                <span>{currentEvent.tags?.length || 0} tags</span>
+              </div>
+              <div className="text-slate-400">
+                Tip: Edit any tag or signature above and click <strong className="text-purple-300">"Verify Event JSON"</strong> to test protocol enforcement.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2 Body: Structured Tag Details */}
         {activeTab === 'details' && (
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -421,7 +605,7 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
           </div>
         )}
 
-        {/* Tab 2: Signed Content */}
+        {/* Tab 3 Body: Signed Content */}
         {activeTab === 'content' && (
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between text-xs text-slate-400">
@@ -443,22 +627,6 @@ export const VerifierView: React.FC<VerifierViewProps> = ({
                 Schnorr Signature (`sig`): <code className="text-slate-300">{currentEvent.sig.slice(0, 32)}...</code>
               </span>
             </div>
-          </div>
-        )}
-
-        {/* Tab 3: Raw JSON Editor */}
-        {activeTab === 'json' && (
-          <div className="p-6 space-y-3">
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span>Edit or Paste Any Nostr Kind 37773 JSON Event</span>
-              {parseError && <span className="text-red-400 font-medium">{parseError}</span>}
-            </div>
-            <textarea
-              value={jsonInput}
-              onChange={(e) => handleJsonChange(e.target.value)}
-              rows={14}
-              className="w-full p-4 bg-[#0B0F17] rounded-lg border border-slate-800 text-xs font-mono text-purple-200 focus:outline-none focus:border-purple-500/80 leading-relaxed resize-y"
-            />
           </div>
         )}
       </div>

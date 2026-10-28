@@ -1,5 +1,7 @@
 # Nostr Kind 37773: Bitcoin-OTC Identity Linkage Proof
 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-thebutterzone%2Fnostr--kind--37773-181717?logo=github)](https://github.com/thebutterzone/nostr-kind-37773)
+
 An interactive reference client, cryptographic verification suite, and specification portal for **Nostr Kind:37773 — Bitcoin-OTC Identity Linkage Proof ONLY**.
 
 > ⚠️ **CRITICAL PROTOCOL SCOPE: BITCOIN-OTC ONLY**
@@ -163,7 +165,7 @@ Kind 37773 cryptographically links a Nostr public key to an external key or addr
 ### Installation
 
 ```bash
-git clone https://github.com/<your-username>/nostr-kind-37773.git
+git clone https://github.com/thebutterzone/nostr-kind-37773.git
 cd nostr-kind-37773
 npm install
 ```
