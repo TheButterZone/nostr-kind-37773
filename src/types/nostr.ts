@@ -21,10 +21,18 @@ export interface ParsedClaimTags {
 }
 
 export interface VerificationDetails {
+  isOverallValid: boolean;
+  criticalErrors: string[];
+
   nostrEventValid: boolean;
   nostrIdMatches: boolean;
   nostrSigMatches: boolean;
   nostrError?: string;
+
+  dTagValid: boolean;
+  identityBindingValid: boolean;
+  pubkeyBindingValid: boolean;
+  claimedNickInProof?: string;
 
   proofType: ProofType;
   cryptoSignatureValid: boolean;

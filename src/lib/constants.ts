@@ -39,10 +39,9 @@ export const THEBUTTERZONE_POC_EVENT: NostrEvent = {
 };
 
 // Valid Bitcoin Signed Message sample for instant BTC proof testing
-// Address: 1L67q5k3x77QxZ3vM31yK7oPzM3WqK5V9A (sample) or standard BIP-137 format:
 export const SAMPLE_BTC_POC_EVENT: NostrEvent = {
-  id: "a310bb21de265882678fdfc2079f82631cf5434d7d13264c8d927a7c73db8e3f",
-  pubkey: "fa984bd7dbb282f07e16e7ae87b2ec47087790ff4f4c2c78f8981e428e204d4f",
+  id: "e8dd9dce4f091803f2b470d6b8a54267985aea1be6fdee6c32076aefab69477e",
+  pubkey: "56b328b30c8bf5839e24058747879408bdb36241dc9c2e7c619faa12b2920967",
   created_at: 1729000000,
   kind: 37773,
   tags: [
@@ -56,20 +55,15 @@ export const SAMPLE_BTC_POC_EVENT: NostrEvent = {
     ],
     [
       "uri",
-      "https://mempool.space/address/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+      "https://bitcoin-otc.com/viewratingdetail.php?nick=satoshi_reserve"
     ],
     [
       "key",
-      "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+      "1FvyAqqELFiQyaEWdhFbWF8MZapKPZS8J7"
     ]
   ],
-  content: `-----BEGIN BITCOIN SIGNED MESSAGE-----
-Address: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
-Message: I, satoshi_reserve, assert control of Nostr pubkey npub1u724pwn2r92x76g63u77g290h835s64c8fcvm25f6966q59quxzquk9dff. This is a self-attested statement associating external identity satoshi_reserve with this Nostr identity.
------BEGIN BITCOIN SIGNATURE-----
-IB8Z24wO6mO/G8vXW3aK9jL7b2K1JgR5X6yN9P4Q7W1Z2X3C4V5B6N7M8L9K0J1H2G3F4D5S6A7Q8W9E0R1T2Y3U=
------END BITCOIN SIGNATURE-----`,
-  sig: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+  content: "-----BEGIN BITCOIN SIGNED MESSAGE-----\nAddress: 1FvyAqqELFiQyaEWdhFbWF8MZapKPZS8J7\nMessage: I, satoshi_reserve, assert control of Nostr pubkey npub126ej3vcv306c883yqkr50pu5pz7mxcjpmjwzulrpn74p9v5jp9ns5f9e49. This is a self-attested statement associating external identity satoshi_reserve with this Nostr identity.\n-----BEGIN BITCOIN SIGNATURE-----\nH0as+974mZWBUDqkFHwRpoaHPMi/CCKnbcyju8ty4rI4Y5Lfly1DxuWG5eM24FJj+XUPEE71Up8Y+Hs7Jmr1zJI=\n-----END BITCOIN SIGNATURE-----",
+  sig: "a4dd2bfebed3ee1e05e3a7d3746a4ee071de4e335e16df53c20834d77beb67cc1ae3813cc9ebb2d3fbb229a473c006e4fc233885fb49acef0acc3498fb56ae32"
 };
 
 export const SPEC_RULES = {

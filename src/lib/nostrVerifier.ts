@@ -58,15 +58,34 @@ export function verifyNostrEventIntegrity(event: NostrEvent): {
   error?: string;
 } {
   try {
+    if (!event.id || !event.pubkey || !event.sig) {
+      return {
+        isValid: false,
+        idMatches: false,
+        sigMatches: false,
+        computedId: '',
+        error: 'Missing required Nostr event properties (id, pubkey, or sig).',
+      };
+    }
     const computedId = getEventHash(event);
     const idMatches = computedId.toLowerCase() === event.id.toLowerCase();
     const sigMatches = verifyEvent(event);
+
+    let error: string | undefined;
+    if (!idMatches && !sigMatches) {
+      error = `Nostr Serialization & Signature Mismatch: Serialized SHA-256 hash (${computedId.slice(0, 16)}...) differs from event.id (${event.id.slice(0, 16)}...), and Schnorr signature is invalid.`;
+    } else if (!idMatches) {
+      error = `Event ID Hash Mismatch: Computed serialized SHA-256 (${computedId.slice(0, 16)}...) does not match declared event.id (${event.id.slice(0, 16)}...). Event data was modified.`;
+    } else if (!sigMatches) {
+      error = `Schnorr Signature Invalid: Signature does not match event author pubkey (${event.pubkey.slice(0, 16)}...) and commitment hash.`;
+    }
 
     return {
       isValid: idMatches && sigMatches,
       idMatches,
       sigMatches,
       computedId,
+      error,
     };
   } catch (err) {
     return {

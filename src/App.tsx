@@ -23,18 +23,59 @@ export default function App() {
     setActiveTab('verifier');
   };
 
+  const getBreadcrumbLabel = () => {
+    switch (activeTab) {
+      case 'verifier':
+        return 'Proof Verifier';
+      case 'builder':
+        return 'Claim Builder';
+      case 'guide':
+        return 'Client UX Compliance Guide';
+      case 'relays':
+        return 'Relay Manager';
+      case 'spec':
+        return 'Specification Rationale';
+      default:
+        return 'Proof Verifier';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col font-sans selection:bg-purple-900/60 selection:text-purple-200">
-      {/* Top Navigation Bar adhering to Top Bar Contract */}
-      <TopBar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onLoadTheButterZonePoc={handleLoadTheButterZonePoc}
-        onLoadBtcPoc={handleLoadBtcPoc}
-      />
+    <div className="min-h-screen bg-white text-[#2e3436] flex flex-col font-sans">
+      {/* Top Header matching bitcoin-otc.com #header with #555753 charcoal & #edd400 gold font */}
+      <div className="w-full bg-[#555753] border-b border-[#3e403c]">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+          <TopBar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onLoadTheButterZonePoc={handleLoadTheButterZonePoc}
+            onLoadBtcPoc={handleLoadBtcPoc}
+          />
+        </div>
+      </div>
+
+      {/* Breadcrumbs Ribbon directly beneath top bar matching bitcoin-otc.com layout */}
+      <div className="w-full bg-white border-b border-[#cccccc]">
+        <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center gap-1.5 text-[11px] text-[#777777]">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab('verifier');
+            }}
+            className="hover:underline text-[#0000ee]"
+          >
+            Home
+          </a>
+          <span className="text-[#888a85]">&gt;</span>
+          <span className="text-[#888a85]">Web of Trust</span>
+          <span className="text-[#888a85]">&gt;</span>
+          <span className="font-semibold text-[#2e3436]">{getBreadcrumbLabel()}</span>
+        </div>
+      </div>
 
       {/* Main Viewport Content Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-4 sm:py-6">
         {activeTab === 'verifier' && (
           <VerifierView
             currentEvent={currentEvent}
@@ -61,45 +102,31 @@ export default function App() {
         {activeTab === 'spec' && <SpecRationaleView />}
       </main>
 
-      {/* Clean Footer */}
-      <footer className="border-t border-slate-800/80 bg-[#0A0D14] py-6 px-6 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-400">Kind 37773</span>
-            <span aria-hidden="true">·</span>
-            <span>Bitcoin-OTC Identity Linkage Proof</span>
-            <span aria-hidden="true">·</span>
-            <span>nsite-ready (Client-Side Standalone)</span>
+      {/* Authentic Utilitarian Footer matching bitcoin-otc.com */}
+      <footer className="otc-footer">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] text-[#777777]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-bold text-[#2e3436]">Kind 37773</span>
+            <span>·</span>
+            <span>#bitcoin-otc Web of Trust Identity Linkage Proof</span>
+            <span>·</span>
+            <span className="font-mono">nsite verifier</span>
           </div>
 
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>Theme: <a href="https://bitcoin-otc.com/" target="_blank" rel="noopener noreferrer">bitcoin-otc.com</a></span>
+            <span className="text-[#cccccc]">|</span>
             <a
               href="https://github.com/thebutterzone/nostr-kind-37773"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-purple-400 transition-colors flex items-center gap-1.5"
+              className="flex items-center gap-1 hover:underline"
             >
-              <span>Source Code (GitHub)</span>
-              <ExternalLink className="w-3 h-3 text-slate-500" />
+              <span>GitHub</span>
+              <ExternalLink className="w-3 h-3 text-[#888a85]" />
             </a>
-            <button
-              onClick={() => setActiveTab('spec')}
-              className="hover:text-purple-400 transition-colors cursor-pointer"
-            >
-              Specification
-            </button>
-            <button
-              onClick={() => setActiveTab('guide')}
-              className="hover:text-purple-400 transition-colors cursor-pointer"
-            >
-              UX Rules
-            </button>
-            <button
-              onClick={() => setActiveTab('relays')}
-              className="hover:text-purple-400 transition-colors cursor-pointer"
-            >
-              Relays
-            </button>
+            <span className="text-[#cccccc]">|</span>
+            <span className="font-mono">Donations: 1F1dPZxdxVVigpGdsafnZ3cFBdMGDADFDe</span>
           </div>
         </div>
       </footer>
